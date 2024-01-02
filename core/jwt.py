@@ -29,16 +29,20 @@ class JWTService:
     def create_jwt_token(self, user: AppUser, token_type: str = 'access'):
         expire = timezone.now() + timedelta(seconds=self.EXPIRATIONS[token_type])
         data = {
+            "type": token_type,
             "id": str(user.id),
             "exp": expire,
         }
         return jwt.encode(data, self.SECRET_KEY, algorithm=self.ALGORITHM)
 
-    def decode_jwt_token(self, token):
+    def decode_jwt_token(self, token, token_type: str = None):
         try:
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
             id = payload.get("id")
             exp = payload.get("exp")
+            type = payload.get("type")
+            if token_type != type:
+                raise self.credentials_exception
 
             date = make_aware(datetime.fromtimestamp(exp))
             user = auth_service.get(id=id)
@@ -50,7 +54,7 @@ class JWTService:
         return user
 
     def get_active_user(self, token: str = Depends(oauth2_scheme)):
-        user = self.decode_jwt_token(token)
+        user = self.decode_jwt_token(token, token_type="access")
         return user
 
 

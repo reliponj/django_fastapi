@@ -40,7 +40,7 @@ class AuthService(BaseService):
     def refresh(self, refresh_data: RefreshSchema):
         from core.jwt import jwt_service
 
-        user = jwt_service.decode_jwt_token(refresh_data.refresh_token)
+        user = jwt_service.decode_jwt_token(refresh_data.refresh_token, token_type='refresh')
         access_token = jwt_service.create_jwt_token(user, token_type='access')
         return OnlyAccessTokenSchema(access_token=access_token, user=user)
 
